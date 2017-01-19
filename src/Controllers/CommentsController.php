@@ -5,12 +5,13 @@ namespace Kordy\Ticketit\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Kordy\Ticketit\Models;
+use Kordy\Ticketit\Models\Comment;
 
 class CommentsController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('Kordy\Ticketit\Middleware\IsAdminMiddleware', ['only' => ['edit', 'update', 'destroy']]);
+        $this->middleware('Kordy\Ticketit\Middleware\IsAdminMiddleware', ['only' => ['edit', 'destroy']]);
         $this->middleware('Kordy\Ticketit\Middleware\ResAccessMiddleware', ['only' => 'store']);
     }
 
@@ -97,7 +98,25 @@ class CommentsController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $this->validate($request, [
+            'content' => 'required|min:6',
+        ]);
+
+        $comment = Comment::findOrFail($id);
+
+        if ($comment->user_id !== \Auth::user()->id) {
+            return redirect()->action('\Kordy\Ticketit\Controllers\TicketsController@index')
+                ->with('warning', trans('ticketit::lang.you-are-not-permitted-to-access'));
+        }
+
+        $comment->setPurifiedContent($request->get('content'));
+        $comment->save();
+
+        $ticket = Models\Ticket::find($comment->ticket_id);
+        $ticket->updated_at = $comment->updated_at;
+        $ticket->save();
+
+        return back()->with('status', trans('ticketit::lang.comment-has-been-updated-ok'));
     }
 
     /**

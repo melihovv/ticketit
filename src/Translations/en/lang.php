@@ -120,6 +120,7 @@ return [
 
 // CommentsController
   'comment-has-been-added-ok'        => 'Comment has been added successfully',
+  'comment-has-been-updated-ok'      => 'Comment has been updated successfully',
 
 // NotificationsController
   'notify-new-comment-from'          => 'New comment from ',
